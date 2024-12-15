@@ -23,5 +23,7 @@ public class UserEntity {
 
 	private Integer gemCount;
 
-    private String rank;
+	private Integer numMilestone;
+
+    private Integer rank;
 }

@@ -73,9 +73,16 @@ public class TradingService implements ITradingService {
 
             Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
             UserEntity userEntity = userEntityOpt.get();
-            Integer userGem = userEntity.getGemCount();
-            Integer newUserGem = userGem + 1;
+            int userGem = userEntity.getGemCount();
+            int milestone = userEntity.getNumMilestone();
+            int newUserGem = userGem + 1;
+            int newMilestone = milestone + 1;
+            int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
+            newUserGem = newUserGem + addMilestone;
+            userEntity.setNumMilestone(newMilestone);
             userEntity.setGemCount(newUserGem);
+
+            userRepository.save(userEntity);
 
             System.out.println("Asset purchased successfully.");
             response.setCode(200);
@@ -131,8 +138,8 @@ public class TradingService implements ITradingService {
         AssetEntity assetEntity = assetEntityOpt.get();
         BigDecimal assetPrice = assetEntity.getPrice();
 
-        Integer quantityToSell = buyAssetDto.quantity();
-        Integer portfolioQuantity = portfolioEntity.getQuantity();
+        int quantityToSell = buyAssetDto.quantity();
+        int portfolioQuantity = portfolioEntity.getQuantity();
 
         if (quantityToSell > portfolioQuantity) {
             System.out.println("Not enough assets to sell.");
@@ -148,15 +155,22 @@ public class TradingService implements ITradingService {
         walletEntity.setBalance(newWalletBalance);
         walletRepository.save(walletEntity);
 
-        Integer newPortfolioQuantity = portfolioQuantity - quantityToSell;
+        int newPortfolioQuantity = portfolioQuantity - quantityToSell;
         portfolioEntity.setQuantity(newPortfolioQuantity);
         portfolioRepository.save(portfolioEntity);
 
         Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
         UserEntity userEntity = userEntityOpt.get();
-        Integer userGem = userEntity.getGemCount();
-        Integer newUserGem = userGem + 1;
+        int userGem = userEntity.getGemCount();
+        int milestone = userEntity.getNumMilestone();
+        int newUserGem = userGem + 1;
+        int newMilestone = milestone + 1;
+        int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
+        newUserGem = newUserGem + addMilestone;
+        userEntity.setNumMilestone(newMilestone);
         userEntity.setGemCount(newUserGem);
+
+        userRepository.save(userEntity);
 
         response.setCode(200);
         response.setStatus("success");
@@ -164,6 +178,17 @@ public class TradingService implements ITradingService {
         System.out.println("Assets sold successfully.");
 
         return response;
+    }
+
+    public Integer calculateMilestone(int totalTrade, int milestone) {
+       if (totalTrade < 5) {
+           return 0;
+       }else if (totalTrade % 5 != 0) {
+           return 0;
+       }else if (totalTrade / 5 > milestone) {
+           return 5;
+       }
+       return 0;
     }
 
 }
