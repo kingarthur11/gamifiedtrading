@@ -4,6 +4,7 @@ import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.BuyAssetDto;
 import com.trove.gamifiedtrading.entity.AssetEntity;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
+import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.AssetRepository;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
@@ -19,6 +20,7 @@ public class TradingService implements ITradingService {
     private final PortfolioRepository portfolioRepository;
     private final AssetRepository assetRepository;
     private final WalletRepository walletRepository;
+    private final UserRepository userRepository;
 
     TradingService(PortfolioRepository portfolioRepository,
                    AssetRepository assetRepository,
@@ -27,6 +29,7 @@ public class TradingService implements ITradingService {
         this.portfolioRepository = portfolioRepository;
         this.assetRepository = assetRepository;
         this.walletRepository = walletRepository;
+        this.userRepository = userRepository;
     }
     @Override
     public BaseResponse buyAsset(BuyAssetDto buyAssetDto) {
@@ -47,7 +50,6 @@ public class TradingService implements ITradingService {
         Optional<AssetEntity> assetEntityOpt = assetRepository.findById(portfolioEntity.getAssetId());
 
         if (walletEntityOpt.isEmpty() || assetEntityOpt.isEmpty()) {
-            System.out.println("Wallet or Asset information is missing.");
             response.setCode(500);
             response.setStatus("success");
             response.setMessage("Wallet or Asset information is missing.");
@@ -68,6 +70,12 @@ public class TradingService implements ITradingService {
 
             portfolioEntity.setQuantity(buyAssetDto.quantity());
             portfolioRepository.save(portfolioEntity);
+
+            Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
+            UserEntity userEntity = userEntityOpt.get();
+            Integer userGem = userEntity.getGemCount();
+            Integer newUserGem = userGem + 1;
+            userEntity.setGemCount(newUserGem);
 
             System.out.println("Asset purchased successfully.");
             response.setCode(200);
@@ -143,6 +151,12 @@ public class TradingService implements ITradingService {
         Integer newPortfolioQuantity = portfolioQuantity - quantityToSell;
         portfolioEntity.setQuantity(newPortfolioQuantity);
         portfolioRepository.save(portfolioEntity);
+
+        Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
+        UserEntity userEntity = userEntityOpt.get();
+        Integer userGem = userEntity.getGemCount();
+        Integer newUserGem = userGem + 1;
+        userEntity.setGemCount(newUserGem);
 
         response.setCode(200);
         response.setStatus("success");

@@ -4,10 +4,8 @@ import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.CreatePortforlioDto;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.entity.AssetEntity;
-import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.AssetRepository;
-import com.trove.gamifiedtrading.repository.UserRepository;
 import com.trove.gamifiedtrading.services.IPortfolioService;
 
 import java.util.Optional;
@@ -16,14 +14,11 @@ public class PortfolioService implements IPortfolioService {
 
     private final PortfolioRepository portfolioRepository;
     private final AssetRepository assetRepository;
-    private final UserRepository userRepository;
 
     public PortfolioService(PortfolioRepository portfolioRepository,
-                            AssetRepository assetRepository,
-                            UserRepository userRepository){
+                            AssetRepository assetRepository){
         this.portfolioRepository = portfolioRepository;
         this.assetRepository = assetRepository;
-        this.userRepository = userRepository;
     }
 
     @Override

@@ -21,7 +21,7 @@ public class UserEntity {
 
 	private String username;
 
-	private String gemCount;
+	private Integer gemCount;
 
     private String rank;
 }
