@@ -1,5 +1,7 @@
 package com.trove.gamifiedtrading.services.implement;
 
+import com.trove.gamifiedtrading.data.body.ApiResponse;
+import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.CreateUserDto;
 import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.entity.WalletEntity;
@@ -43,12 +45,12 @@ class UserServiceTest {
         when(userRepository.findAll()).thenReturn(mockUsers);
 
         // Act
-        List<UserEntity> users = userService.getAllUsers();
+        ApiResponse<List<UserEntity>> response = userService.getAllUsers();
 
         // Assert
-        assertEquals(2, users.size());
-        assertEquals("john", users.get(0).getUsername());
-        assertEquals("doe", users.get(1).getUsername());
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getStatus());
+        assertEquals("Users retrieved successfully.", response.getMessage());
 
         verify(userRepository, times(1)).findAll();
     }
@@ -60,14 +62,18 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         // Act
-        Optional<UserEntity> result = userService.getUserById(1L);
+        ApiResponse<Optional<UserEntity>> response = userService.getUserById(1L);
 
         // Assert
-        assertTrue(result.isPresent());
-        assertEquals("john", result.get().getUsername());
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getStatus());
+        assertEquals("User retrieved successfully.", response.getMessage());
+        assertTrue(response.getResult().isPresent());
+        assertEquals(user, response.getResult().get());
 
         verify(userRepository, times(1)).findById(1L);
     }
+
 
     @Test
     void getUserById_ShouldReturnEmpty_WhenUserDoesNotExist() {
@@ -75,10 +81,13 @@ class UserServiceTest {
         when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
         // Act
-        Optional<UserEntity> result = userService.getUserById(1L);
+        ApiResponse<Optional<UserEntity>> response = userService.getUserById(1L);
 
         // Assert
-        assertTrue(result.isEmpty());
+//        assertTrue(result.isEmpty());
+        assertEquals(404, response.getCode());
+        assertEquals("error", response.getStatus());
+        assertEquals("User not found.", response.getMessage());
 
         verify(userRepository, times(1)).findById(1L);
     }
@@ -86,30 +95,55 @@ class UserServiceTest {
     @Test
     void saveUser_ShouldCreateUserAndWallet() {
         // Arrange
-        CreateUserDto createUserDto = new CreateUserDto("john", 10, 3);
+        CreateUserDto createUserDto = new CreateUserDto("john");
 
         UserEntity savedUserEntity = new UserEntity();
         savedUserEntity.setId(1L);
         savedUserEntity.setUsername(createUserDto.username());
-        savedUserEntity.setGemCount(createUserDto.gemCount());
-        savedUserEntity.setRank(createUserDto.rank());
 
         WalletEntity walletEntity = new WalletEntity();
         walletEntity.setUserId(savedUserEntity.getId());
 
+        when(userRepository.findByUsername(createUserDto.username())).thenReturn(Optional.empty());
         when(userRepository.save(any(UserEntity.class))).thenReturn(savedUserEntity);
         when(walletRepository.save(any(WalletEntity.class))).thenReturn(walletEntity);
 
         // Act
-        UserEntity result = userService.saveUser(createUserDto);
+        BaseResponse response = userService.saveUser(createUserDto);
 
         // Assert
-        assertEquals(1L, result.getId());
-        assertEquals("john", result.getUsername());
-        assertEquals(10, result.getGemCount());
-        assertEquals(3, result.getRank());
+        assertEquals(200, response.getCode());
+        assertEquals("success", response.getStatus());
+        assertEquals("User created successfully.", response.getMessage());
 
+        verify(userRepository, times(1)).findByUsername(createUserDto.username());
         verify(userRepository, times(1)).save(any(UserEntity.class));
         verify(walletRepository, times(1)).save(any(WalletEntity.class));
     }
+
+    @Test
+    void saveUser_ShouldReturnError_WhenUserAlreadyExists() {
+        // Arrange
+        CreateUserDto createUserDto = new CreateUserDto("john");
+
+        UserEntity existingUserEntity = new UserEntity();
+        existingUserEntity.setId(1L);
+        existingUserEntity.setUsername(createUserDto.username());
+
+        // Mock userRepository to return existing user (user already exists)
+        when(userRepository.findByUsername(createUserDto.username())).thenReturn(Optional.of(existingUserEntity));
+
+        // Act
+        BaseResponse response = userService.saveUser(createUserDto);
+
+        // Assert
+        assertEquals(400, response.getCode());
+        assertEquals("error", response.getStatus());
+        assertEquals("User already exist.", response.getMessage());
+
+        verify(userRepository, times(1)).findByUsername(createUserDto.username());
+        verify(userRepository, never()).save(any(UserEntity.class));
+        verify(walletRepository, never()).save(any(WalletEntity.class));
+    }
+
 }

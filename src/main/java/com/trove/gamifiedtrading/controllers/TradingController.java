@@ -1,7 +1,6 @@
 package com.trove.gamifiedtrading.controllers;
 
 import com.trove.gamifiedtrading.data.dto.BuyAssetDto;
-import com.trove.gamifiedtrading.data.dto.CreateUserDto;
 import com.trove.gamifiedtrading.services.ITradingService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
