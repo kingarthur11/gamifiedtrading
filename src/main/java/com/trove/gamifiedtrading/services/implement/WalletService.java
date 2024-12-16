@@ -24,6 +24,14 @@ public class WalletService implements IWalletService {
     public BaseResponse creditFunds(CreditWalletDto creditWalletDto) {
         var response = new BaseResponse();
         Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(creditWalletDto.userId());
+
+        if (walletEntityOpt.isEmpty()) {
+            response.setCode(404);
+            response.setStatus("error");
+            response.setMessage("Wallet not found.");
+            return response;
+        }
+
         WalletEntity walletEntity = walletEntityOpt.get();
 
         BigDecimal newWalletBalance = walletEntity.getBalance().add(creditWalletDto.amount());
@@ -41,13 +49,26 @@ public class WalletService implements IWalletService {
     public BaseResponse transferFunds(TransferFromWalletDto transferFromWalletDto) {
         var response = new BaseResponse();
         Optional<WalletEntity> fromWalletEntityOpt = walletRepository.findByUserId(transferFromWalletDto.fromUserId());
-        WalletEntity fromWalletEntity = fromWalletEntityOpt.get();
-
         Optional<WalletEntity> toWalletEntityOpt = walletRepository.findByUserId(transferFromWalletDto.toUserId());
+
+        if (fromWalletEntityOpt.isEmpty() || toWalletEntityOpt.isEmpty()) {
+            response.setCode(404);
+            response.setStatus("error");
+            response.setMessage("Wallet not found.");
+            return response;
+        }
+
+        WalletEntity fromWalletEntity = fromWalletEntityOpt.get();
         WalletEntity toWalletEntity = toWalletEntityOpt.get();
 
         BigDecimal toNewWalletBalance = toWalletEntity.getBalance().add(transferFromWalletDto.amount());
         BigDecimal fromNewWalletBalance = fromWalletEntity.getBalance().subtract(transferFromWalletDto.amount());
+
+        if (fromNewWalletBalance.compareTo(transferFromWalletDto.amount()) < 0) {
+            response.setCode(400);
+            response.setStatus("error");
+            response.setMessage("Insufficient balance to transfer.");
+        }
 
         toWalletEntity.setBalance(toNewWalletBalance);
         walletRepository.save(toWalletEntity);
