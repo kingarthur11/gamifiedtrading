@@ -6,11 +6,13 @@ import com.trove.gamifiedtrading.data.dto.TransferFromWalletDto;
 import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.WalletRepository;
 import com.trove.gamifiedtrading.services.IWalletService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class WalletService implements IWalletService {
 
@@ -61,14 +63,19 @@ public class WalletService implements IWalletService {
         WalletEntity fromWalletEntity = fromWalletEntityOpt.get();
         WalletEntity toWalletEntity = toWalletEntityOpt.get();
 
-        BigDecimal toNewWalletBalance = toWalletEntity.getBalance().add(transferFromWalletDto.amount());
-        BigDecimal fromNewWalletBalance = fromWalletEntity.getBalance().subtract(transferFromWalletDto.amount());
+        log.info("before funds " + fromWalletEntity.getBalance());
+        log.info("before funds " + transferFromWalletDto.amount());
 
-        if (fromNewWalletBalance.compareTo(transferFromWalletDto.amount()) < 0) {
+        if (fromWalletEntity.getBalance().compareTo(transferFromWalletDto.amount()) < 0) {
             response.setCode(400);
             response.setStatus("error");
             response.setMessage("Insufficient balance to transfer.");
+
+            return response;
         }
+
+        BigDecimal toNewWalletBalance = toWalletEntity.getBalance().add(transferFromWalletDto.amount());
+        BigDecimal fromNewWalletBalance = fromWalletEntity.getBalance().subtract(transferFromWalletDto.amount());
 
         toWalletEntity.setBalance(toNewWalletBalance);
         walletRepository.save(toWalletEntity);
@@ -78,7 +85,7 @@ public class WalletService implements IWalletService {
 
         response.setCode(200);
         response.setStatus("success");
-        response.setMessage("Wallet credited successfully");
+        response.setMessage("Funds transferred successfully");
 
         return response;
     }
