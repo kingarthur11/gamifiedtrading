@@ -3,9 +3,11 @@ package com.trove.gamifiedtrading.services.implement;
 import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.repository.UserRepository;
 import com.trove.gamifiedtrading.services.ILeaderBoard;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class LeaderBoard implements ILeaderBoard {
 
     private final UserRepository userRepository;

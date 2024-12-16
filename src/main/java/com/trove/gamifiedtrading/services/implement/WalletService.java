@@ -1,15 +1,17 @@
 package com.trove.gamifiedtrading.services.implement;
 
 import com.trove.gamifiedtrading.data.body.BaseResponse;
-import com.trove.gamifiedtrading.data.dto.UpdateWalletDto;
-import com.trove.gamifiedtrading.entity.PortfolioEntity;
+import com.trove.gamifiedtrading.data.dto.CreditWalletDto;
+import com.trove.gamifiedtrading.data.dto.TransferFromWalletDto;
 import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.WalletRepository;
 import com.trove.gamifiedtrading.services.IWalletService;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+@Service
 public class WalletService implements IWalletService {
 
     private final WalletRepository walletRepository;
@@ -19,12 +21,12 @@ public class WalletService implements IWalletService {
     }
 
     @Override
-    public BaseResponse creditFunds(UpdateWalletDto updateWalletDto) {
+    public BaseResponse creditFunds(CreditWalletDto creditWalletDto) {
         var response = new BaseResponse();
-        Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(updateWalletDto.userId());
+        Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(creditWalletDto.userId());
         WalletEntity walletEntity = walletEntityOpt.get();
 
-        BigDecimal newWalletBalance = walletEntity.getBalance().add(updateWalletDto.amount());
+        BigDecimal newWalletBalance = walletEntity.getBalance().add(creditWalletDto.amount());
 
         walletEntity.setBalance(newWalletBalance);
 
@@ -36,16 +38,16 @@ public class WalletService implements IWalletService {
     }
 
     @Override
-    public BaseResponse transferFunds(UpdateWalletDto updateWalletDto) {
+    public BaseResponse transferFunds(TransferFromWalletDto transferFromWalletDto) {
         var response = new BaseResponse();
-        Optional<WalletEntity> fromWalletEntityOpt = walletRepository.findByUserId(updateWalletDto.userId());
+        Optional<WalletEntity> fromWalletEntityOpt = walletRepository.findByUserId(transferFromWalletDto.fromUserId());
         WalletEntity fromWalletEntity = fromWalletEntityOpt.get();
 
-        Optional<WalletEntity> toWalletEntityOpt = walletRepository.findByUserId(updateWalletDto.userId());
+        Optional<WalletEntity> toWalletEntityOpt = walletRepository.findByUserId(transferFromWalletDto.toUserId());
         WalletEntity toWalletEntity = toWalletEntityOpt.get();
 
-        BigDecimal toNewWalletBalance = toWalletEntity.getBalance().add(updateWalletDto.amount());
-        BigDecimal fromNewWalletBalance = fromWalletEntity.getBalance().subtract(updateWalletDto.amount());
+        BigDecimal toNewWalletBalance = toWalletEntity.getBalance().add(transferFromWalletDto.amount());
+        BigDecimal fromNewWalletBalance = fromWalletEntity.getBalance().subtract(transferFromWalletDto.amount());
 
         toWalletEntity.setBalance(toNewWalletBalance);
         walletRepository.save(toWalletEntity);

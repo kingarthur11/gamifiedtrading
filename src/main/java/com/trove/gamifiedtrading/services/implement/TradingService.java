@@ -11,10 +11,12 @@ import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.UserRepository;
 import com.trove.gamifiedtrading.repository.WalletRepository;
 import com.trove.gamifiedtrading.services.ITradingService;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+@Service
 public class TradingService implements ITradingService {
 
     private final PortfolioRepository portfolioRepository;
@@ -38,20 +40,20 @@ public class TradingService implements ITradingService {
 
         if (portfolioEntityOpt.isEmpty()) {
             System.out.println("Portfolio not found.");
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(404);
+            response.setStatus("error");
             response.setMessage("Portfolio not found.");
             return response;
         }
 
         PortfolioEntity portfolioEntity = portfolioEntityOpt.get();
 
-        Optional<WalletEntity> walletEntityOpt = walletRepository.findById(portfolioEntity.getUserId());
+        Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(portfolioEntity.getUserId());
         Optional<AssetEntity> assetEntityOpt = assetRepository.findById(portfolioEntity.getAssetId());
 
         if (walletEntityOpt.isEmpty() || assetEntityOpt.isEmpty()) {
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(404);
+            response.setStatus("error");
             response.setMessage("Wallet or Asset information is missing.");
             return response;
         }
@@ -61,8 +63,11 @@ public class TradingService implements ITradingService {
 
         BigDecimal walletBalance = walletEntity.getBalance();
         BigDecimal assetPrice = assetEntity.getPrice();
+        int quantityToBuy = buyAssetDto.quantity();
 
-        if (walletBalance.compareTo(assetPrice) >= 0) {
+        BigDecimal totalBuyPrice = assetPrice.multiply(new BigDecimal(quantityToBuy));
+
+        if (walletBalance.compareTo(totalBuyPrice) >= 0) {
 
             BigDecimal newBalance = walletBalance.subtract(assetPrice);
             walletEntity.setBalance(newBalance);
@@ -73,16 +78,29 @@ public class TradingService implements ITradingService {
 
             Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
             UserEntity userEntity = userEntityOpt.get();
+
             int userGem = userEntity.getGemCount();
             int milestone = userEntity.getNumMilestone();
+            int numBuy = userEntity.getBuyCount();
+            int numSell = userEntity.getSellCount();
+
             int newUserGem = userGem + 1;
             int newMilestone = milestone + 1;
+            numBuy = numBuy + 1;
+
             int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
-            newUserGem = newUserGem + addMilestone;
+            int addStreak = calculateTradingStreaks(numBuy, numSell, "buy");
+
+            newUserGem = newUserGem + addMilestone + addStreak;
+
+            if (addStreak == 3) userEntity.setSellCount(0);
+
             userEntity.setNumMilestone(newMilestone);
             userEntity.setGemCount(newUserGem);
-
             userRepository.save(userEntity);
+
+            assetEntity.setCount(1);
+            assetRepository.save(assetEntity);
 
             System.out.println("Asset purchased successfully.");
             response.setCode(200);
@@ -92,8 +110,8 @@ public class TradingService implements ITradingService {
             return response;
         } else {
             System.out.println("Insufficient balance to purchase the asset.");
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(400);
+            response.setStatus("error");
             response.setMessage("Insufficient balance to purchase the asset.");
             return response;
         }
@@ -107,19 +125,19 @@ public class TradingService implements ITradingService {
 
         if (portfolioEntityOpt.isEmpty()) {
             System.out.println("Portfolio not found.");
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(404);
+            response.setStatus("error");
             response.setMessage("Portfolio not found.");
             return response;
         }
 
         PortfolioEntity portfolioEntity = portfolioEntityOpt.get();
 
-        Optional<WalletEntity> walletEntityOpt = walletRepository.findById(portfolioEntity.getUserId());
+        Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(portfolioEntity.getUserId());
         if (walletEntityOpt.isEmpty()) {
             System.out.println("Wallet not found.");
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(404);
+            response.setStatus("error");
             response.setMessage("Wallet not found.");
             return response;
         }
@@ -130,7 +148,7 @@ public class TradingService implements ITradingService {
         if (assetEntityOpt.isEmpty()) {
             System.out.println("Asset information is missing.");
             response.setCode(500);
-            response.setStatus("success");
+            response.setStatus("error");
             response.setMessage("Asset information is missing.");
             return response;
         }
@@ -143,8 +161,8 @@ public class TradingService implements ITradingService {
 
         if (quantityToSell > portfolioQuantity) {
             System.out.println("Not enough assets to sell.");
-            response.setCode(500);
-            response.setStatus("success");
+            response.setCode(400);
+            response.setStatus("error");
             response.setMessage("Not enough assets to sell.");
             return response;
         }
@@ -161,16 +179,29 @@ public class TradingService implements ITradingService {
 
         Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
         UserEntity userEntity = userEntityOpt.get();
+
         int userGem = userEntity.getGemCount();
         int milestone = userEntity.getNumMilestone();
+        int numBuy = userEntity.getBuyCount();
+        int numSell = userEntity.getSellCount();
+
         int newUserGem = userGem + 1;
         int newMilestone = milestone + 1;
+        numSell = numSell + 1;
+
         int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
-        newUserGem = newUserGem + addMilestone;
+        int addStreak = calculateTradingStreaks(numBuy, numSell, "sell");
+
+        newUserGem = newUserGem + addMilestone + addStreak;
+
+        if (addStreak == 3) userEntity.setSellCount(0);
+
         userEntity.setNumMilestone(newMilestone);
         userEntity.setGemCount(newUserGem);
-
         userRepository.save(userEntity);
+
+        assetEntity.setCount(1);
+        assetRepository.save(assetEntity);
 
         response.setCode(200);
         response.setStatus("success");
@@ -189,6 +220,24 @@ public class TradingService implements ITradingService {
            return 5;
        }
        return 0;
+    }
+
+    public Integer calculateTradingStreaks(int numBuy, int numSell, String target){
+        if (numSell != 3 && numBuy != 3) {
+            return 0;
+        }
+        if (target.equals("buy")){
+            if (numSell == 0) {
+                return 3;
+            }
+        }
+        if (target.equals("sell")){
+            if (numBuy == 0) {
+                return 3;
+            }
+        }
+
+        return 0;
     }
 
 }

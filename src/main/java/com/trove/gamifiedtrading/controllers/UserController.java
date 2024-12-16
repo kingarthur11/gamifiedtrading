@@ -41,15 +41,4 @@ public class UserController {
         return "this user has been updated";
     }
 
-//    @PutMapping("/{id}")
-//    public String updateUser(@PathVariable("id") Long id, @RequestBody CreateUserDto createUserDto) {
-//        iUserService.updateUser(id, createUserDto);
-//        return "this user has been updated";
-//    }
-//
-//    @DeleteMapping("/{id}")
-//    public String deleteUser(@PathVariable("id") Long id) {
-//        iUserService.deleteUser(id);
-//        return "this user has been deleted";
-//    }
 }

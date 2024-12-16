@@ -22,9 +22,6 @@ public class PortfolioEntity {
 
 	private Integer quantity = 0;
 
-	@Column(precision = 20, scale = 2)
-    private BigDecimal price;
-
 	private Long userId;
 
 	private Long assetId;

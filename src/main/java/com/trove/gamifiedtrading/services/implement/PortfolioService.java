@@ -7,9 +7,11 @@ import com.trove.gamifiedtrading.entity.AssetEntity;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.AssetRepository;
 import com.trove.gamifiedtrading.services.IPortfolioService;
+import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 
+@Service
 public class PortfolioService implements IPortfolioService {
 
     private final PortfolioRepository portfolioRepository;
@@ -25,6 +27,15 @@ public class PortfolioService implements IPortfolioService {
     public BaseResponse addAsset(CreatePortforlioDto createPortforlioDto) {
         var response = new BaseResponse();
 
+        Optional<AssetEntity> assetEntityOpt = assetRepository.findById(createPortforlioDto.assetId());
+
+        if (assetEntityOpt.isEmpty()) {
+            response.setCode(404);
+            response.setStatus("error");
+            response.setMessage("Asset not found.");
+            return response;
+        }
+
         Optional<PortfolioEntity> existingPortfolioOpt = portfolioRepository.findByUserId(createPortforlioDto.userId())
             .filter(portf -> portf.getAssetId().equals(createPortforlioDto.assetId()));
 
@@ -32,15 +43,6 @@ public class PortfolioService implements IPortfolioService {
             response.setCode(400);
             response.setStatus("error");
             response.setMessage("Portfolio already exists for the given asset.");
-            return response;
-        }
-
-        Optional<AssetEntity> assetEntityOpt = assetRepository.findById(createPortforlioDto.assetId());
-
-        if (assetEntityOpt.isEmpty()) {
-            response.setCode(404);
-            response.setStatus("error");
-            response.setMessage("Asset not found.");
             return response;
         }
 
@@ -65,16 +67,6 @@ public class PortfolioService implements IPortfolioService {
     public BaseResponse removeAsset(CreatePortforlioDto createPortforlioDto) {
         var response = new BaseResponse();
 
-        Optional<PortfolioEntity> existingPortfolioOpt = portfolioRepository.findByUserId(createPortforlioDto.userId())
-            .filter(portf -> portf.getAssetId().equals(createPortforlioDto.assetId()));
-
-        if (existingPortfolioOpt.isEmpty()) {
-            response.setCode(400);
-            response.setStatus("error");
-            response.setMessage("Portfolio does not exists for the given asset.");
-            return response;
-        }
-
         Optional<AssetEntity> assetEntityOpt = assetRepository.findById(createPortforlioDto.assetId());
 
         if (assetEntityOpt.isEmpty()) {
@@ -83,6 +75,17 @@ public class PortfolioService implements IPortfolioService {
             response.setMessage("Asset not found.");
             return response;
         }
+
+        Optional<PortfolioEntity> existingPortfolioOpt = portfolioRepository.findByUserId(createPortforlioDto.userId())
+            .filter(portf -> portf.getAssetId().equals(createPortforlioDto.assetId()));
+
+        if (existingPortfolioOpt.isEmpty()) {
+            response.setCode(404);
+            response.setStatus("error");
+            response.setMessage("Portfolio does not exists for the given asset.");
+            return response;
+        }
+
 
         PortfolioEntity portfolio = existingPortfolioOpt.get();
         portfolioRepository.deleteById(portfolio.getId());
