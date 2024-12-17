@@ -1,14 +1,17 @@
 package com.trove.gamifiedtrading.services.implement;
 
+import com.trove.gamifiedtrading.data.body.ApiResponse;
 import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.CreatePortforlioDto;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.entity.AssetEntity;
+import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.AssetRepository;
 import com.trove.gamifiedtrading.services.IPortfolioService;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +24,39 @@ public class PortfolioService implements IPortfolioService {
                             AssetRepository assetRepository){
         this.portfolioRepository = portfolioRepository;
         this.assetRepository = assetRepository;
+    }
+
+    @Override
+    public ApiResponse<List<PortfolioEntity>> getAllPortfolios() {
+        var response = new ApiResponse<List<PortfolioEntity>>();
+        List<PortfolioEntity> portfolios = portfolioRepository.findAll();
+
+        response.setStatus("success");
+        response.setMessage("Portfolios retrieved successfully.");
+        response.setCode(200);
+        response.setResult(portfolios);
+
+        return response;
+    }
+
+    @Override
+    public ApiResponse<Optional<PortfolioEntity>> getPortfolioById(Long id) {
+        var response = new ApiResponse<Optional<PortfolioEntity>>();
+        Optional<PortfolioEntity> portfolio = portfolioRepository.findById(id);
+
+        if (portfolio.isPresent()) {
+            response.setStatus("success");
+            response.setMessage("Portfolio retrieved successfully.");
+            response.setCode(200);
+            response.setResult(portfolio);
+        } else {
+            response.setStatus("error");
+            response.setMessage("Portfolio not found.");
+            response.setCode(404);
+            response.setResult(Optional.empty());
+        }
+
+        return response;
     }
 
     @Override

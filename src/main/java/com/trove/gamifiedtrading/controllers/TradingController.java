@@ -1,7 +1,11 @@
 package com.trove.gamifiedtrading.controllers;
 
+import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.BuyAssetDto;
+import com.trove.gamifiedtrading.data.dto.CreateAssetDto;
 import com.trove.gamifiedtrading.services.ITradingService;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,15 +21,24 @@ public class TradingController {
         this.iTradingService = iTradingService;
     }
 
+    @PostMapping("/create-asset")
+    public ResponseEntity<BaseResponse> create(@RequestBody CreateAssetDto createAssetDto) {
+
+        var response = iTradingService.createAsset(createAssetDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @PostMapping("/buy-asset")
-    public String buy(@RequestBody BuyAssetDto buyAssetDto) {
-        iTradingService.buyAsset(buyAssetDto);
-        return "this user has been updated";
+    public ResponseEntity<BaseResponse> buy(@RequestBody BuyAssetDto buyAssetDto) {
+
+        var response = iTradingService.buyAsset(buyAssetDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/sell-asset")
-    public String sell(@RequestBody BuyAssetDto buyAssetDto) {
-        iTradingService.sellAsset(buyAssetDto);
-        return "this user has been updated";
+    public ResponseEntity<BaseResponse> sell(@RequestBody BuyAssetDto buyAssetDto) {
+
+        var response = iTradingService.sellAsset(buyAssetDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

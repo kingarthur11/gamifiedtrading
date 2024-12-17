@@ -21,7 +21,7 @@ public class AssetEntity {
 	private String name;
 
 	@Column(precision = 20, scale = 2)
-    private BigDecimal price;
+    private BigDecimal price = BigDecimal.ZERO;
 
-	private Integer count;
+	private Integer count = 0;
 }

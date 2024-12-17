@@ -3,7 +3,6 @@ package com.trove.gamifiedtrading.services.implement;
 import com.trove.gamifiedtrading.data.body.ApiResponse;
 import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.CreateUserDto;
-import com.trove.gamifiedtrading.entity.AssetEntity;
 import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.UserRepository;

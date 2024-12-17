@@ -21,13 +21,15 @@ public class UserEntity {
 
 	private String username;
 
-	private Integer gemCount;
+	private Integer gemCount = 0;
 
-	private Integer buyCount;
+	private Integer buyCount = 0;
 
-	private Integer sellCount;
+	private Integer sellCount = 0;
 
-	private Integer numMilestone;
+	private Integer numMilestone = 0;
 
-    private Integer rank;
+	private Integer totalTrade = 0;
+
+    private Integer rank = 0;
 }

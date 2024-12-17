@@ -1,9 +1,6 @@
 package com.trove.gamifiedtrading.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,5 +20,6 @@ public class WalletEntity {
 
     private Long userId;
 
-    private BigDecimal balance;
+    @Column(precision = 20, scale = 2)
+    private BigDecimal balance = BigDecimal.ZERO;
 }

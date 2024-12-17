@@ -52,8 +52,18 @@ class UserServiceTest {
         assertEquals("success", response.getStatus());
         assertEquals("Users retrieved successfully.", response.getMessage());
 
+        // Ensure the result is not null
+        assertNotNull(response.getResult());
+        assertEquals(mockUsers.size(), response.getResult().size());
+
+        // Compare each user individually for equality
+        for (int i = 0; i < mockUsers.size(); i++) {
+            assertEquals(mockUsers.get(i), response.getResult().get(i));
+        }
+
         verify(userRepository, times(1)).findAll();
     }
+
 
     @Test
     void getUserById_ShouldReturnUser_WhenUserExists() {

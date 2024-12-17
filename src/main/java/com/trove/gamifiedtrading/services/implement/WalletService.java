@@ -1,8 +1,10 @@
 package com.trove.gamifiedtrading.services.implement;
 
+import com.trove.gamifiedtrading.data.body.ApiResponse;
 import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.CreditWalletDto;
 import com.trove.gamifiedtrading.data.dto.TransferFromWalletDto;
+import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.WalletRepository;
 import com.trove.gamifiedtrading.services.IWalletService;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 @Slf4j
@@ -20,6 +23,39 @@ public class WalletService implements IWalletService {
 
     WalletService(WalletRepository walletRepository){
         this.walletRepository = walletRepository;
+    }
+
+    @Override
+    public ApiResponse<List<WalletEntity>> getAllWallets() {
+        var response = new ApiResponse<List<WalletEntity>>();
+        List<WalletEntity> wallets = walletRepository.findAll();
+
+        response.setStatus("success");
+        response.setMessage("Wallets retrieved successfully.");
+        response.setCode(200);
+        response.setResult(wallets);
+
+        return response;
+    }
+
+    @Override
+    public ApiResponse<Optional<WalletEntity>> getWalletById(Long id) {
+        var response = new ApiResponse<Optional<WalletEntity>>();
+        Optional<WalletEntity> walletEntity = walletRepository.findById(id);
+
+        if (walletEntity.isPresent()) {
+            response.setStatus("success");
+            response.setMessage("Wallet retrieved successfully.");
+            response.setCode(200);
+            response.setResult(walletEntity);
+        } else {
+            response.setStatus("error");
+            response.setMessage("Wallet not found.");
+            response.setCode(404);
+            response.setResult(Optional.empty());
+        }
+
+        return response;
     }
 
     @Override
@@ -35,10 +71,9 @@ public class WalletService implements IWalletService {
         }
 
         WalletEntity walletEntity = walletEntityOpt.get();
-
         BigDecimal newWalletBalance = walletEntity.getBalance().add(creditWalletDto.amount());
-
         walletEntity.setBalance(newWalletBalance);
+        walletRepository.save(walletEntity);
 
         response.setCode(200);
         response.setStatus("success");

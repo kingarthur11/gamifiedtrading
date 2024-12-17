@@ -2,6 +2,7 @@ package com.trove.gamifiedtrading.services.implement;
 
 import com.trove.gamifiedtrading.data.body.BaseResponse;
 import com.trove.gamifiedtrading.data.dto.BuyAssetDto;
+import com.trove.gamifiedtrading.data.dto.CreateAssetDto;
 import com.trove.gamifiedtrading.entity.AssetEntity;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.entity.UserEntity;
@@ -11,11 +12,13 @@ import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.UserRepository;
 import com.trove.gamifiedtrading.repository.WalletRepository;
 import com.trove.gamifiedtrading.services.ITradingService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.Optional;
 
+@Slf4j
 @Service
 public class TradingService implements ITradingService {
 
@@ -33,6 +36,31 @@ public class TradingService implements ITradingService {
         this.walletRepository = walletRepository;
         this.userRepository = userRepository;
     }
+
+    @Override
+    public BaseResponse createAsset(CreateAssetDto createAssetDto) {
+        var response = new BaseResponse();
+        Optional<AssetEntity> assetEntityOpt = assetRepository.findByName(createAssetDto.name());
+
+        if (assetEntityOpt.isPresent()) {
+            response.setCode(400);
+            response.setStatus("error");
+            response.setMessage("Asset with name already exist.");
+            return response;
+        }
+
+        AssetEntity assetEntity = new AssetEntity();
+        assetEntity.setName(createAssetDto.name());
+        assetEntity.setPrice(createAssetDto.price());
+        assetRepository.save(assetEntity);
+
+        response.setCode(200);
+        response.setStatus("success");
+        response.setMessage("Asset created successfully.");
+
+        return response;
+    }
+
     @Override
     public BaseResponse buyAsset(BuyAssetDto buyAssetDto) {
         var response = new BaseResponse();
@@ -69,11 +97,13 @@ public class TradingService implements ITradingService {
 
         if (walletBalance.compareTo(totalBuyPrice) >= 0) {
 
-            BigDecimal newBalance = walletBalance.subtract(assetPrice);
+            BigDecimal newBalance = walletBalance.subtract(totalBuyPrice);
             walletEntity.setBalance(newBalance);
             walletRepository.save(walletEntity);
 
-            portfolioEntity.setQuantity(buyAssetDto.quantity());
+            int portfolioQuantity = portfolioEntity.getQuantity();
+            int newPortfolioQuantity = portfolioQuantity + quantityToBuy;
+            portfolioEntity.setQuantity(newPortfolioQuantity);
             portfolioRepository.save(portfolioEntity);
 
             Optional<UserEntity> userEntityOpt = userRepository.findById(buyAssetDto.userId());
@@ -83,19 +113,33 @@ public class TradingService implements ITradingService {
             int milestone = userEntity.getNumMilestone();
             int numBuy = userEntity.getBuyCount();
             int numSell = userEntity.getSellCount();
+            int trade = userEntity.getTotalTrade();
 
             int newUserGem = userGem + 1;
             int newMilestone = milestone + 1;
             numBuy = numBuy + 1;
+            trade = trade + 1;
 
-            int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
+            log.info("port quantity streak: " + numBuy);
+            log.info("port quantity gem: " + numSell);
+
+            int addMilestone = calculateMilestone(trade, userEntity.getNumMilestone());
             int addStreak = calculateTradingStreaks(numBuy, numSell, "buy");
 
             newUserGem = newUserGem + addMilestone + addStreak;
 
-            if (addStreak == 3) userEntity.setSellCount(0);
+            if (addMilestone == 5) userEntity.setNumMilestone(newMilestone);
 
-            userEntity.setNumMilestone(newMilestone);
+            if (addStreak == 3) {
+                userEntity.setBuyCount(0);
+            }else {
+                userEntity.setBuyCount(numBuy);
+            };
+
+            log.info("port quantity new: " + addMilestone);
+
+            userEntity.setTotalTrade(trade);
+//            userEntity.setNumMilestone(newMilestone);
             userEntity.setGemCount(newUserGem);
             userRepository.save(userEntity);
 
@@ -124,7 +168,6 @@ public class TradingService implements ITradingService {
         Optional<PortfolioEntity> portfolioEntityOpt = portfolioRepository.findById(buyAssetDto.portfolioId());
 
         if (portfolioEntityOpt.isEmpty()) {
-            System.out.println("Portfolio not found.");
             response.setCode(404);
             response.setStatus("error");
             response.setMessage("Portfolio not found.");
@@ -135,7 +178,6 @@ public class TradingService implements ITradingService {
 
         Optional<WalletEntity> walletEntityOpt = walletRepository.findByUserId(portfolioEntity.getUserId());
         if (walletEntityOpt.isEmpty()) {
-            System.out.println("Wallet not found.");
             response.setCode(404);
             response.setStatus("error");
             response.setMessage("Wallet not found.");
@@ -146,7 +188,6 @@ public class TradingService implements ITradingService {
 
         Optional<AssetEntity> assetEntityOpt = assetRepository.findById(portfolioEntity.getAssetId());
         if (assetEntityOpt.isEmpty()) {
-            System.out.println("Asset information is missing.");
             response.setCode(500);
             response.setStatus("error");
             response.setMessage("Asset information is missing.");
@@ -160,7 +201,6 @@ public class TradingService implements ITradingService {
         int portfolioQuantity = portfolioEntity.getQuantity();
 
         if (quantityToSell > portfolioQuantity) {
-            System.out.println("Not enough assets to sell.");
             response.setCode(400);
             response.setStatus("error");
             response.setMessage("Not enough assets to sell.");
@@ -184,18 +224,27 @@ public class TradingService implements ITradingService {
         int milestone = userEntity.getNumMilestone();
         int numBuy = userEntity.getBuyCount();
         int numSell = userEntity.getSellCount();
+        int trade = userEntity.getTotalTrade();
 
         int newUserGem = userGem + 1;
         int newMilestone = milestone + 1;
         numSell = numSell + 1;
+        trade = trade + 1;
 
-        int addMilestone = calculateMilestone(newUserGem, userEntity.getNumMilestone());
+        int addMilestone = calculateMilestone(trade, userEntity.getNumMilestone());
         int addStreak = calculateTradingStreaks(numBuy, numSell, "sell");
 
         newUserGem = newUserGem + addMilestone + addStreak;
 
-        if (addStreak == 3) userEntity.setSellCount(0);
+        if (addMilestone == 5) userEntity.setNumMilestone(newMilestone);
 
+        if (addStreak == 3) {
+            userEntity.setSellCount(0);
+        }else {
+            userEntity.setSellCount(numSell);
+        };
+
+        userEntity.setTotalTrade(trade);
         userEntity.setNumMilestone(newMilestone);
         userEntity.setGemCount(newUserGem);
         userRepository.save(userEntity);
@@ -212,13 +261,19 @@ public class TradingService implements ITradingService {
     }
 
     public Integer calculateMilestone(int totalTrade, int milestone) {
+       log.info("port quantity totalTrade: " + totalTrade);
+       log.info("port quantity milestone: " + milestone);
        if (totalTrade < 5) {
+           log.info("not up to 5 ");
            return 0;
        }else if (totalTrade % 5 != 0) {
+           log.info("not divisible by 5 ");
            return 0;
        }else if (totalTrade / 5 > milestone) {
+           log.info("equal to 5 ");
            return 5;
        }
+        log.info("not applicable");
        return 0;
     }
 
