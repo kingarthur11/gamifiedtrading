@@ -120,9 +120,6 @@ public class TradingService implements ITradingService {
             numBuy = numBuy + 1;
             trade = trade + 1;
 
-            log.info("port quantity streak: " + numBuy);
-            log.info("port quantity gem: " + numSell);
-
             int addMilestone = calculateMilestone(trade, userEntity.getNumMilestone());
             int addStreak = calculateTradingStreaks(numBuy, numSell, "buy");
 
@@ -136,24 +133,20 @@ public class TradingService implements ITradingService {
                 userEntity.setBuyCount(numBuy);
             };
 
-            log.info("port quantity new: " + addMilestone);
-
+            userEntity.setSellCount(0);
             userEntity.setTotalTrade(trade);
-//            userEntity.setNumMilestone(newMilestone);
             userEntity.setGemCount(newUserGem);
             userRepository.save(userEntity);
 
             assetEntity.setCount(1);
             assetRepository.save(assetEntity);
 
-            System.out.println("Asset purchased successfully.");
             response.setCode(200);
             response.setStatus("success");
             response.setMessage("Asset purchased successfully.");
 
             return response;
         } else {
-            System.out.println("Insufficient balance to purchase the asset.");
             response.setCode(400);
             response.setStatus("error");
             response.setMessage("Insufficient balance to purchase the asset.");
@@ -244,6 +237,7 @@ public class TradingService implements ITradingService {
             userEntity.setSellCount(numSell);
         };
 
+        userEntity.setBuyCount(0);
         userEntity.setTotalTrade(trade);
         userEntity.setNumMilestone(newMilestone);
         userEntity.setGemCount(newUserGem);
@@ -261,19 +255,13 @@ public class TradingService implements ITradingService {
     }
 
     public Integer calculateMilestone(int totalTrade, int milestone) {
-       log.info("port quantity totalTrade: " + totalTrade);
-       log.info("port quantity milestone: " + milestone);
        if (totalTrade < 5) {
-           log.info("not up to 5 ");
            return 0;
        }else if (totalTrade % 5 != 0) {
-           log.info("not divisible by 5 ");
            return 0;
        }else if (totalTrade / 5 > milestone) {
-           log.info("equal to 5 ");
            return 5;
        }
-        log.info("not applicable");
        return 0;
     }
 
