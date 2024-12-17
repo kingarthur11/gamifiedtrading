@@ -2,6 +2,7 @@ package com.trove.gamifiedtrading.controllers;
 
 import com.trove.gamifiedtrading.data.body.ApiResponse;
 import com.trove.gamifiedtrading.data.body.BaseResponse;
+import com.trove.gamifiedtrading.data.dto.ConvertAssetValue;
 import com.trove.gamifiedtrading.data.dto.CreatePortforlioDto;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.services.IPortfolioService;
@@ -46,5 +47,11 @@ public class PortfolioController {
 
         var response = iPortfolioService.removeAsset(createPortforlioDto);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/asset-value")
+    public ResponseEntity<ApiResponse<List<ConvertAssetValue>>> getAssetValue() {
+        ApiResponse<List<ConvertAssetValue>> portfolio = iPortfolioService.calculateAssetValue();
+        return new ResponseEntity<>(portfolio, HttpStatus.OK);
     }
 }

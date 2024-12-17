@@ -2,15 +2,16 @@ package com.trove.gamifiedtrading.services.implement;
 
 import com.trove.gamifiedtrading.data.body.ApiResponse;
 import com.trove.gamifiedtrading.data.body.BaseResponse;
+import com.trove.gamifiedtrading.data.dto.ConvertAssetValue;
 import com.trove.gamifiedtrading.data.dto.CreatePortforlioDto;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.entity.AssetEntity;
-import com.trove.gamifiedtrading.entity.WalletEntity;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.AssetRepository;
 import com.trove.gamifiedtrading.services.IPortfolioService;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -134,7 +135,29 @@ public class PortfolioService implements IPortfolioService {
     }
 
     @Override
-    public PortfolioEntity calculateAssetValue(int quantity) {
-        return null;
+    public ApiResponse<List<ConvertAssetValue>> calculateAssetValue() {
+        var response = new ApiResponse<List<ConvertAssetValue>>();
+        List<ConvertAssetValue> assetValues = portfolioRepository.findAll()
+                .stream().map(this::assetValue).toList();
+
+        response.setStatus("success");
+        response.setMessage("AssetValues retrieved successfully.");
+        response.setCode(200);
+        response.setResult(assetValues);
+
+        return response;
+    }
+
+    private ConvertAssetValue assetValue(PortfolioEntity portfolioEntity) {
+        Optional<AssetEntity> assetEntityOpt = assetRepository.findById(portfolioEntity.getAssetId());
+
+        AssetEntity assetEntity = assetEntityOpt.get();
+        BigDecimal totalSalePrice = assetEntity.getPrice().multiply(new BigDecimal(portfolioEntity.getQuantity()));
+        return new ConvertAssetValue(
+                assetEntity.getName(),
+                portfolioEntity.getQuantity(),
+                assetEntity.getName(),
+                totalSalePrice
+        );
     }
 }

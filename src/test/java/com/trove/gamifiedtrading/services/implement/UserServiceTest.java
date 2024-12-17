@@ -38,8 +38,8 @@ class UserServiceTest {
     @Test
     void getAllUsers_ShouldReturnListOfUsers() {
         // Arrange
-        UserEntity user1 = new UserEntity(1L, "john", 10, 2, 0, 10, 3);
-        UserEntity user2 = new UserEntity(2L, "doe", 10, 2, 0, 10, 3);
+        UserEntity user1 = new UserEntity(1L, "john", 10, 2, 0, 10, 0, 3);
+        UserEntity user2 = new UserEntity(2L, "doe", 10, 2, 0, 10, 0, 3);
         List<UserEntity> mockUsers = List.of(user1, user2);
 
         when(userRepository.findAll()).thenReturn(mockUsers);
@@ -68,7 +68,7 @@ class UserServiceTest {
     @Test
     void getUserById_ShouldReturnUser_WhenUserExists() {
         // Arrange
-        UserEntity user = new UserEntity(1L, "john", 10, 2, 0, 10, 3);
+        UserEntity user = new UserEntity(1L, "john", 10, 2, 0, 10, 0, 3);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         // Act

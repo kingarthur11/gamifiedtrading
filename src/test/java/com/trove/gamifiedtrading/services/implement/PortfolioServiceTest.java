@@ -36,7 +36,7 @@ class PortfolioServiceTest {
 
     @Test
     void testAddAsset_Success() {
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 100, 0, 1L);
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 1L);
 
         AssetEntity assetEntity = new AssetEntity();
         assetEntity.setId(100L);
@@ -60,7 +60,7 @@ class PortfolioServiceTest {
     @Test
     void testAddAsset_AlreadyExists() {
         // Arrange
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 100, 0, null);
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 1L);
         PortfolioEntity existingPortfolio = new PortfolioEntity();
         existingPortfolio.setAssetId(100L);
 
@@ -80,7 +80,7 @@ class PortfolioServiceTest {
     @Test
     void testAddAsset_AssetNotFound() {
         // Arrange
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 100, 0, null);
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 1L);
 
         when(portfolioRepository.findByUserId(1L)).thenReturn(Optional.empty());
         when(assetRepository.findById(100L)).thenReturn(Optional.empty());
@@ -98,7 +98,7 @@ class PortfolioServiceTest {
 
     @Test
     void testRemoveAsset_Success() {
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 100, 0, 1L);
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 1L);
         PortfolioEntity existingPortfolio = new PortfolioEntity();
         existingPortfolio.setId(1L);
         existingPortfolio.setAssetId(100L);
@@ -124,7 +124,7 @@ class PortfolioServiceTest {
     @Test
     void testRemoveAsset_PortfolioDoesNotExist() {
         // Arrange
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 100, 0, null);
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(100L, 1L);
         AssetEntity assetEntity = new AssetEntity();
         assetEntity.setId(100L);
         assetEntity.setName("Gold");
@@ -145,7 +145,7 @@ class PortfolioServiceTest {
 
     @Test
     void testRemoveAsset_AssetNotFound() {
-        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 100, 0, 1L);  // assetId should be 100
+        CreatePortforlioDto createPortfolioDto = new CreatePortforlioDto(1L, 1L);  // assetId should be 100
 
         PortfolioEntity existingPortfolio = new PortfolioEntity();
         existingPortfolio.setId(1L);
