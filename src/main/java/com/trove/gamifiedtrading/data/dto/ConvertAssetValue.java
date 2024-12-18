@@ -6,6 +6,7 @@ public record ConvertAssetValue(
         String username,
         Integer quantity,
         String assetName,
-        BigDecimal value
+        BigDecimal value,
+        BigDecimal assetPrice
 ) {
 }

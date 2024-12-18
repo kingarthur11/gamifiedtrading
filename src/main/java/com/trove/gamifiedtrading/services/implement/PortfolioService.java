@@ -6,8 +6,10 @@ import com.trove.gamifiedtrading.data.dto.ConvertAssetValue;
 import com.trove.gamifiedtrading.data.dto.CreatePortforlioDto;
 import com.trove.gamifiedtrading.entity.PortfolioEntity;
 import com.trove.gamifiedtrading.entity.AssetEntity;
+import com.trove.gamifiedtrading.entity.UserEntity;
 import com.trove.gamifiedtrading.repository.PortfolioRepository;
 import com.trove.gamifiedtrading.repository.AssetRepository;
+import com.trove.gamifiedtrading.repository.UserRepository;
 import com.trove.gamifiedtrading.services.IPortfolioService;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +20,16 @@ import java.util.Optional;
 @Service
 public class PortfolioService implements IPortfolioService {
 
+    private final UserRepository userRepository;
     private final PortfolioRepository portfolioRepository;
     private final AssetRepository assetRepository;
 
-    public PortfolioService(PortfolioRepository portfolioRepository,
+    public PortfolioService(UserRepository userRepository,
+                            PortfolioRepository portfolioRepository,
                             AssetRepository assetRepository){
         this.portfolioRepository = portfolioRepository;
         this.assetRepository = assetRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -150,14 +155,17 @@ public class PortfolioService implements IPortfolioService {
 
     private ConvertAssetValue assetValue(PortfolioEntity portfolioEntity) {
         Optional<AssetEntity> assetEntityOpt = assetRepository.findById(portfolioEntity.getAssetId());
+        Optional<UserEntity> userEntityOpt = userRepository.findById(portfolioEntity.getUserId());
 
         AssetEntity assetEntity = assetEntityOpt.get();
-        BigDecimal totalSalePrice = assetEntity.getPrice().multiply(new BigDecimal(portfolioEntity.getQuantity()));
+        UserEntity user = userEntityOpt.get();
+        BigDecimal value = assetEntity.getPrice().multiply(new BigDecimal(portfolioEntity.getQuantity()));
         return new ConvertAssetValue(
-                assetEntity.getName(),
+                user.getUsername(),
                 portfolioEntity.getQuantity(),
                 assetEntity.getName(),
-                totalSalePrice
+                value,
+                assetEntity.getPrice()
         );
     }
 }

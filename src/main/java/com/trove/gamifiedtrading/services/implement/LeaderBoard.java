@@ -42,10 +42,10 @@ public class LeaderBoard implements ILeaderBoard {
     }
 
     public static ConvertUserEntity convertUserEntity(UserEntity userEntity) {
-
+        Long rank = userEntity.getId();
         return new ConvertUserEntity(
            userEntity.getUsername(),
-           userEntity.getRank(),
+           rank,
            userEntity.getGemCount()
         );
     }

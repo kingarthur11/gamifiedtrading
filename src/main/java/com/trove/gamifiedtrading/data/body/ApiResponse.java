@@ -11,4 +11,9 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ApiResponse<TData> extends BaseResponse {
     private TData result;
+
+    public ApiResponse(String status, String message, Integer code, TData result) {
+        super(status, message, code);
+        this.result = result;
+    }
 }
